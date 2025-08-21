@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  department String?
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  specifications Specification[]
+
+  @@map("users")
+}
+
+model Specification {
+  id          String   @id @default(cuid())
+  title       String
+  category    String
+  status      String   @default("draft")
+  version     Int      @default(1)
+  formData    Json
+  content     Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  exports SpecificationExport[]
+
+  @@map("specifications")
+}
+
+model SpecificationExport {
+  id        String   @id @default(cuid())
+  format    String
+  filename  String
+  fileSize  Int
+  createdAt DateTime @default(now())
+
+  specificationId String
+  specification   Specification @relation(fields: [specificationId], references: [id], onDelete: Cascade)
+
+  @@map("specification_exports")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entityId  String
+  entityType String
+  details   Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+}
