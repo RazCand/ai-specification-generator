@@ -23,7 +23,7 @@ const Header: React.FC = () => {
                 <FileText className="w-6 h-6 text-white" />
               </div>
               <div className="ml-3">
-                <h1 className="text-xl font-bold text-gray-900">AI Spec Generator</h1>
+                <h1 className="text-xl font-bold text-gray-900">AI Spec Generator Test</h1>
                 <p className="text-xs text-gray-500">by Tribus Advisory</p>
               </div>
             </Link>
