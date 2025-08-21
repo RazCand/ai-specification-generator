@@ -10,9 +10,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    console.log('Request body received:', JSON.stringify(req.body, null, 2))
+    
     // Validate input
     const validation = validateSpecificationInput(req.body)
+    
+    console.log('Validation result:', validation)
+    
     if (!validation.success) {
+      console.log('Validation failed with errors:', validation.errors)
       return res.status(400).json({
         error: 'Validation failed',
         details: validation.errors
