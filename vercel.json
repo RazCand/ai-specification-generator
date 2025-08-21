@@ -8,21 +8,5 @@
       "maxDuration": 60
     }
   },
-  "regions": ["syd1"],
-  "env": {
-    "POSTGRES_URL": "@postgres_url",
-    "POSTGRES_PRISMA_URL": "@postgres_prisma_url",
-    "POSTGRES_URL_NON_POOLING": "@postgres_url_non_pooling",
-    "OPENAI_API_KEY": "@openai_api_key",
-    "NEXTAUTH_SECRET": "@nextauth_secret",
-    "NEXTAUTH_URL": "@nextauth_url",
-    "N8N_WEBHOOK_URL": "@n8n_webhook_url"
-  },
-  "build": {
-    "env": {
-      "POSTGRES_URL": "@postgres_url",
-      "POSTGRES_PRISMA_URL": "@postgres_prisma_url",
-      "POSTGRES_URL_NON_POOLING": "@postgres_url_non_pooling"
-    }
-  }
+  "regions": ["syd1"]
 }
