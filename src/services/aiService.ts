@@ -49,6 +49,7 @@ export async function generateSpecificationContent(formData: FormData) {
     })
 
     const generatedContent = response.choices[0].message.content
+    console.log('Raw OpenAI response:', generatedContent) // Add this line
     return parseSpecificationContent(generatedContent || '')
 
   } catch (error) {
