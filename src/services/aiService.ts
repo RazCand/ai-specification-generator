@@ -122,20 +122,18 @@ function parseSpecificationContent(content: string) {
 function extractSection(content: string, sectionTitle: string): string {
   // Try multiple patterns to handle different GPT formatting
   const patterns = [
-    // "1. Executive Summary" or "Executive Summary"
-    new RegExp(`(?:^|\\n)\\d*\\.?\\s*${sectionTitle}:?[\\s\\S]*?(?=\\n\\d+\\.|\\n[A-Z][\\w\\s&]+:|$)`, 'i'),
-    // "## Executive Summary" (markdown)
-    new RegExp(`(?:^|\\n)#+\\s*${sectionTitle}[\\s\\S]*?(?=\\n#+|$)`, 'i'),
-    // "**Executive Summary**" (bold)
-    new RegExp(`(?:^|\\n)\\*\\*${sectionTitle}\\*\\*[\\s\\S]*?(?=\\n\\*\\*|$)`, 'i')
+    // "**1. Executive Summary:**" (markdown bold with number)
+    new RegExp(`\\*\\*\\d*\\.?\\s*${sectionTitle}:?\\*\\*([\\s\\S]*?)(?=\\*\\*\\d+\\.|\\*\\*[A-Z][\\w\\s&]+:|$)`, 'i'),
+    // "1. Executive Summary" or just "Executive Summary"
+    new RegExp(`(?:^|\\n)\\d*\\.?\\s*${sectionTitle}:?([\\s\\S]*?)(?=\\n\\d+\\.|\\n[A-Z][\\w\\s&]+:|$)`, 'i'),
+    // "## Executive Summary" (markdown headers)
+    new RegExp(`#+\\s*${sectionTitle}([\\s\\S]*?)(?=\\n#+|$)`, 'i')
   ]
   
   for (const pattern of patterns) {
     const match = content.match(pattern)
-    if (match) {
-      let result = match[0]
-        .replace(new RegExp(`^\\d*\\.?\\s*\\*?\\*?#+?\\s*${sectionTitle}:?\\*?\\*?`, 'i'), '')
-        .trim()
+    if (match && match[1]) {
+      let result = match[1].trim()
       
       if (result.length > 50) { // Only return if we got substantial content
         return result
