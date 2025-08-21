@@ -34,6 +34,8 @@ export async function generateSpecificationContent(formData: FormData) {
 
     Format the response as a structured document suitable for Australian council procurement processes.`
 
+    console.log('About to call OpenAI')
+
     const response = await openai.chat.completions.create({
       model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo',
       messages: [
@@ -51,7 +53,17 @@ export async function generateSpecificationContent(formData: FormData) {
     })
 
     const generatedContent = response.choices[0].message.content
-    return parseSpecificationContent(generatedContent || '')
+    console.log('OpenAI response received, length:', generatedContent?.length)
+    console.log('First 500 chars:', generatedContent?.substring(0, 500))
+
+    try {
+      const parsed = parseSpecificationContent(generatedContent || '')
+      console.log('Parsing completed successfully')
+      return parsed
+    } catch (parseError) {
+      console.error('Parsing error:', parseError)
+      throw parseError
+    }
 
   } catch (error) {
     console.error('AI service error:', error)
@@ -60,7 +72,6 @@ export async function generateSpecificationContent(formData: FormData) {
 }
 
 function buildBasePrompt(formData: FormData): string {
-  // Convert string arrays back to arrays if needed
   const keyReqs = Array.isArray(formData.keyRequirements) 
     ? formData.keyRequirements 
     : [formData.keyRequirements]
@@ -109,13 +120,27 @@ function parseSpecificationContent(content: string) {
 }
 
 function extractSection(content: string, sectionTitle: string): string {
-  const regex = new RegExp(`(?:^|\\n)\\d*\\.?\\s*${sectionTitle}[\\s\\S]*?(?=\\n\\d+\\.|$)`, 'i')
-  const match = content.match(regex)
+  // Try multiple patterns to handle different GPT formatting
+  const patterns = [
+    // "1. Executive Summary" or "Executive Summary"
+    new RegExp(`(?:^|\\n)\\d*\\.?\\s*${sectionTitle}:?[\\s\\S]*?(?=\\n\\d+\\.|\\n[A-Z][\\w\\s&]+:|$)`, 'i'),
+    // "## Executive Summary" (markdown)
+    new RegExp(`(?:^|\\n)#+\\s*${sectionTitle}[\\s\\S]*?(?=\\n#+|$)`, 'i'),
+    // "**Executive Summary**" (bold)
+    new RegExp(`(?:^|\\n)\\*\\*${sectionTitle}\\*\\*[\\s\\S]*?(?=\\n\\*\\*|$)`, 'i')
+  ]
   
-  if (match) {
-    return match[0]
-      .replace(new RegExp(`^\\d*\\.?\\s*${sectionTitle}`, 'i'), '')
-      .trim()
+  for (const pattern of patterns) {
+    const match = content.match(pattern)
+    if (match) {
+      let result = match[0]
+        .replace(new RegExp(`^\\d*\\.?\\s*\\*?\\*?#+?\\s*${sectionTitle}:?\\*?\\*?`, 'i'), '')
+        .trim()
+      
+      if (result.length > 50) { // Only return if we got substantial content
+        return result
+      }
+    }
   }
   
   return `Content for ${sectionTitle} section would be generated here based on the provided requirements.`
