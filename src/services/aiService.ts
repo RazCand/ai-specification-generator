@@ -17,8 +17,7 @@ interface FormData {
 
 export async function generateSpecificationContent(formData: FormData) {
   try {
-    console.log('=== FORM DATA RECEIVED ===')
-    console.log(JSON.stringify(formData, null, 2))
+    console.log('Form data received for:', formData.projectTitle)
     
     const basePrompt = buildBasePrompt(formData)
     const categoryPrompt = getPromptForCategory(formData.category)
@@ -34,9 +33,6 @@ export async function generateSpecificationContent(formData: FormData) {
     8. Budget Considerations
 
     Format the response as a structured document suitable for Australian council procurement processes.`
-
-    console.log('=== FULL PROMPT SENT TO OPENAI ===')
-    console.log(fullPrompt)
 
     const response = await openai.chat.completions.create({
       model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo',
@@ -55,16 +51,7 @@ export async function generateSpecificationContent(formData: FormData) {
     })
 
     const generatedContent = response.choices[0].message.content
-    console.log('=== RAW OPENAI RESPONSE ===')
-    console.log(generatedContent)
-    console.log('=== END RESPONSE ===')
-    
-    const parsed = parseSpecificationContent(generatedContent || '')
-    console.log('=== PARSED CONTENT ===')
-    console.log(JSON.stringify(parsed, null, 2))
-    console.log('=== END PARSED ===')
-    
-    return parsed
+    return parseSpecificationContent(generatedContent || '')
 
   } catch (error) {
     console.error('AI service error:', error)
