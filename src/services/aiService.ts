@@ -33,7 +33,7 @@ export async function generateSpecificationContent(formData: FormData) {
     Format the response as a structured document suitable for Australian council procurement processes.`
 
     const response = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL || 'gpt-4',
+      model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo',
       messages: [
         {
           role: 'system',
