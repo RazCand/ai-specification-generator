@@ -1,4 +1,5 @@
 // Strategic Domain Knowledge Integration for Mining and Municipal Sectors
+import { getPromptForCategory } from './prompts'
 
 export const getMiningDomainEnhancements = (category: string): string => {
   const miningEnhancements = {
@@ -198,5 +199,5 @@ export const getEnhancedPromptForCategory = (
   return basePrompt
 }
 
-// Import the original function to maintain compatibility
-export { getPromptForCategory } from './prompts'
+// Re-export the original function to maintain compatibility
+export { getPromptForCategory }

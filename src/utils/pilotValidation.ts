@@ -187,7 +187,7 @@ export class PilotValidationService {
       "Validate risk assessment accuracy"
     ]
 
-    const domainSpecific = {
+    const domainSpecific: Record<string, string[]> = {
       'mining': [
         "Validate mining-specific compliance requirements",
         "Demonstrate safety and environmental risk identification"
