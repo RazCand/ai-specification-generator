@@ -10,6 +10,8 @@ export interface SpecificationFormData {
   additionalNotes?: string
   contactPerson: string
   department: string
+  domain?: DomainType
+  strategicPriority?: StrategicPriority
 }
 
 export type ProcurementCategory = 
@@ -33,6 +35,15 @@ export type BudgetRange =
 
 export type UrgencyLevel = 'low' | 'medium' | 'high' | 'critical'
 
+export type DomainType = 'general' | 'mining' | 'municipal'
+
+export type StrategicPriority =
+  | 'cost-optimization'
+  | 'innovation-focus'
+  | 'risk-mitigation'
+  | 'capability-building'
+  | 'strategic-partnership'
+
 export interface GeneratedSpecification {
   id: string
   formData: SpecificationFormData
@@ -46,6 +57,9 @@ export interface GeneratedSpecification {
     timeline: string
     budget: string
   }
+  riskAssessment?: any // Will be populated by risk assessment service
+  evaluationFramework?: any // Will be populated by evaluation service
+  workflowStatus?: 'draft' | 'review' | 'approved' | 'active' | 'completed'
   generatedAt: Date
   version: number
 }

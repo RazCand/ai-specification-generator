@@ -1,5 +1,7 @@
 import openai from '@/lib/openai'
 import { getPromptForCategory } from '@/utils/prompts'
+import { getEnhancedPromptForCategory } from '@/utils/domainPrompts'
+import { riskAssessmentService } from './riskAssessmentService'
 
 interface FormData {
   projectTitle: string
@@ -13,35 +15,51 @@ interface FormData {
   additionalNotes?: string
   contactPerson: string
   department: string
+  domain?: 'general' | 'mining' | 'municipal'
+  strategicPriority?: string
 }
 
 export async function generateSpecificationContent(formData: FormData) {
   try {
-    console.log('Form data received for:', formData.projectTitle)
-    
+    console.log('Strategic specification generation for:', formData.projectTitle)
+    console.log('Domain:', formData.domain, 'Priority:', formData.strategicPriority)
+
     const basePrompt = buildBasePrompt(formData)
-    const categoryPrompt = getPromptForCategory(formData.category)
-    
-    const fullPrompt = `${basePrompt}\n\n${categoryPrompt}\n\nPlease generate a comprehensive procurement specification with the following sections:
-    1. Executive Summary
-    2. Project Scope
-    3. Requirements
-    4. Technical Specifications
-    5. Compliance & Standards
-    6. Evaluation Criteria
-    7. Timeline & Milestones
-    8. Budget Considerations
 
-    Format the response as a structured document suitable for Australian council procurement processes.`
+    // Use enhanced prompts with domain knowledge
+    const domain = formData.domain || 'general'
+    const categoryPrompt = getEnhancedPromptForCategory(
+      formData.category,
+      domain,
+      formData.budgetRange,
+      formData.urgency
+    )
 
-    console.log('About to call OpenAI')
+    const strategicContext = getStrategicContext(formData)
+
+    const fullPrompt = `${basePrompt}\n\n${categoryPrompt}\n\n${strategicContext}\n\nPlease generate a comprehensive strategic procurement specification with the following sections:
+    1. Executive Summary (emphasize strategic value and risk considerations)
+    2. Project Scope (include stakeholder impact analysis)
+    3. Requirements (prioritize by strategic importance)
+    4. Technical Specifications (include future-proofing considerations)
+    5. Compliance & Standards (emphasize risk mitigation)
+    6. Evaluation Criteria (include strategic alignment metrics)
+    7. Timeline & Milestones (include risk-based contingencies)
+    8. Budget Considerations (include total cost of ownership and strategic value)
+
+    Format the response as a structured document suitable for strategic procurement processes requiring executive oversight.`
+
+    console.log('About to call OpenAI for strategic specification generation')
 
     const response = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo',
+      model: process.env.OPENAI_MODEL || 'gpt-4',
       messages: [
         {
           role: 'system',
-          content: 'You are an expert procurement specialist for Australian local councils. Generate professional, comprehensive procurement specifications that comply with Australian government procurement standards and best practices.'
+          content: `You are a strategic procurement intelligence specialist for complex, high-value contracts.
+          Generate professional, comprehensive procurement specifications that integrate strategic thinking,
+          risk management, and stakeholder considerations. Focus on contracts valued at $1M+ that require
+          executive oversight and long-term strategic thinking.`
         },
         {
           role: 'user',
@@ -49,26 +67,58 @@ export async function generateSpecificationContent(formData: FormData) {
         }
       ],
       max_tokens: 4000,
-      temperature: 0.3
+      temperature: 0.2
     })
 
     const generatedContent = response.choices[0].message.content
-    console.log('OpenAI response received, length:', generatedContent?.length)
-    console.log('First 500 chars:', generatedContent?.substring(0, 500))
+    console.log('Strategic specification generated, length:', generatedContent?.length)
 
-    try {
-      const parsed = parseSpecificationContent(generatedContent || '')
-      console.log('Parsing completed successfully')
-      return parsed
-    } catch (parseError) {
-      console.error('Parsing error:', parseError)
-      throw parseError
+    const parsed = parseSpecificationContent(generatedContent || '')
+    console.log('Strategic specification parsing completed')
+
+    return {
+      specification: parsed,
+      isStrategic: isStrategicProcurement(formData),
+      requiresRiskAssessment: shouldGenerateRiskAssessment(formData),
+      domain: formData.domain || 'general'
     }
 
   } catch (error) {
-    console.error('AI service error:', error)
-    throw new Error('Failed to generate specification content')
+    console.error('Strategic AI service error:', error)
+    throw new Error('Failed to generate strategic specification content')
   }
+}
+
+function getStrategicContext(formData: FormData): string {
+  if (!isStrategicProcurement(formData)) return ''
+
+  return `
+STRATEGIC PROCUREMENT INTELLIGENCE CONTEXT:
+This is a strategic procurement requiring enhanced governance and risk management.
+
+Strategic Priority: ${formData.strategicPriority || 'Not specified'}
+Domain Expertise: ${formData.domain || 'General'}
+Budget Classification: ${formData.budgetRange}
+Urgency Level: ${formData.urgency}
+
+Additional Strategic Considerations:
+- This procurement may impact multiple stakeholders and requires comprehensive communication planning
+- Consider long-term strategic relationships and vendor partnership potential
+- Implement comprehensive risk assessment and mitigation planning
+- Plan for performance monitoring and strategic value measurement
+- Consider innovation opportunities and capability development potential
+- Ensure compliance with strategic procurement governance requirements
+`
+}
+
+function isStrategicProcurement(formData: FormData): boolean {
+  return formData.budgetRange === 'over-1m' ||
+         formData.budgetRange === '500k-1m' ||
+         formData.urgency === 'critical'
+}
+
+function shouldGenerateRiskAssessment(formData: FormData): boolean {
+  return isStrategicProcurement(formData)
 }
 
 function buildBasePrompt(formData: FormData): string {

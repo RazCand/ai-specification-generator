@@ -15,6 +15,8 @@ interface SpecFormData {
   additionalNotes: string
   contactPerson: string
   department: string
+  domain: 'general' | 'mining' | 'municipal'
+  strategicPriority: 'cost-optimization' | 'innovation-focus' | 'risk-mitigation' | 'capability-building' | 'strategic-partnership'
 }
 
 interface Props {
@@ -23,15 +25,20 @@ interface Props {
 }
 
 const SpecificationForm: React.FC<Props> = ({ onSubmit, isLoading }) => {
-  const { register, handleSubmit, formState: { errors } } = useForm<SpecFormData>({
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<SpecFormData>({
     defaultValues: {
       urgency: 'medium',
+      domain: 'general',
+      strategicPriority: 'cost-optimization',
       keyRequirements: '',
       complianceRequirements: '',
       successCriteria: '',
       additionalNotes: ''
     }
   })
+
+  const budgetRange = watch('budgetRange')
+  const isStrategicProcurement = budgetRange === 'over-1m' || budgetRange === '500k-1m'
 
   const handleFormSubmit = (data: SpecFormData) => {
     // Convert single strings to arrays for backend compatibility
@@ -148,6 +155,61 @@ const SpecificationForm: React.FC<Props> = ({ onSubmit, isLoading }) => {
           />
         </FormField>
       </div>
+
+      {/* Strategic Intelligence Fields - Show for high-value contracts */}
+      {isStrategicProcurement && (
+        <div className="space-y-6 bg-blue-50 p-6 rounded-lg border border-blue-200">
+          <h3 className="text-lg font-medium text-blue-900 border-b border-blue-200 pb-2">
+            Strategic Procurement Intelligence
+            <span className="text-sm font-normal text-blue-700 ml-2">
+              (Enhanced for high-value contracts)
+            </span>
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              label="Domain Expertise"
+              required
+              error={errors.domain?.message}
+              description="Select the specialized domain for enhanced AI intelligence"
+            >
+              <select
+                {...register('domain', { required: 'Domain selection is required for strategic procurement' })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="general">General Procurement</option>
+                <option value="mining">Mining & Resources</option>
+                <option value="municipal">Municipal & Government</option>
+              </select>
+            </FormField>
+
+            <FormField
+              label="Strategic Priority"
+              required
+              error={errors.strategicPriority?.message}
+              description="Primary strategic focus for this procurement"
+            >
+              <select
+                {...register('strategicPriority', { required: 'Strategic priority is required for strategic procurement' })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="cost-optimization">Cost Optimization</option>
+                <option value="innovation-focus">Innovation Focus</option>
+                <option value="risk-mitigation">Risk Mitigation</option>
+                <option value="capability-building">Capability Building</option>
+                <option value="strategic-partnership">Strategic Partnership</option>
+              </select>
+            </FormField>
+          </div>
+
+          <div className="bg-blue-100 p-4 rounded-md">
+            <p className="text-sm text-blue-800">
+              <strong>Strategic Intelligence Features:</strong> This procurement will include enhanced AI-powered risk assessment,
+              multi-dimensional evaluation frameworks, and stakeholder workflow orchestration suitable for executive oversight.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Requirements */}
       <div className="space-y-6">

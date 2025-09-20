@@ -1,16 +1,27 @@
 import React, { useState } from 'react'
-import { Download, FileText, RefreshCw, CheckCircle, Edit3 } from 'lucide-react'
+import { Download, FileText, RefreshCw, CheckCircle, Edit3, Shield, AlertTriangle, TrendingUp } from 'lucide-react'
 import { GeneratedSpecification } from '@/types'
 import ExportOptions from './ExportOptions'
 
 interface Props {
-  specification: GeneratedSpecification
+  specification: GeneratedSpecification & {
+    isStrategic?: boolean
+    riskAssessment?: any
+    metadata?: {
+      domain?: string
+      strategicPriority?: string
+      enhancedFeatures?: boolean
+    }
+  }
   onStartOver: () => void
 }
 
 const SpecificationPreview: React.FC<Props> = ({ specification, onStartOver }) => {
   const [showExportOptions, setShowExportOptions] = useState(false)
   const [activeSection, setActiveSection] = useState('executive-summary')
+
+  const isStrategic = specification.isStrategic || false
+  const hasRiskAssessment = specification.riskAssessment != null
 
   const sections = [
     { id: 'executive-summary', title: 'Executive Summary', content: specification.content.executiveSummary },
@@ -23,18 +34,87 @@ const SpecificationPreview: React.FC<Props> = ({ specification, onStartOver }) =
     { id: 'budget', title: 'Budget Considerations', content: specification.content.budget }
   ]
 
+  // Add risk assessment section for strategic procurements
+  if (hasRiskAssessment) {
+    sections.push({
+      id: 'risk-assessment',
+      title: 'Risk Assessment',
+      content: formatRiskAssessment(specification.riskAssessment)
+    })
+  }
+
+  function formatRiskAssessment(riskAssessment: any): string {
+    if (!riskAssessment) return 'Risk assessment not available'
+
+    return `
+<div class="risk-assessment">
+  <div class="risk-overview">
+    <h4>Overall Risk Level: <span class="risk-${riskAssessment.riskLevel}">${riskAssessment.riskLevel.toUpperCase()}</span></h4>
+    <p><strong>Risk Score:</strong> ${riskAssessment.overallRiskScore}/100</p>
+  </div>
+
+  <div class="risk-categories">
+    <h4>Risk Categories:</h4>
+    ${riskAssessment.categories?.map((cat: any) => `
+      <div class="risk-category">
+        <h5>${cat.type.charAt(0).toUpperCase() + cat.type.slice(1)} Risk (${cat.score}/100)</h5>
+        <p><strong>Impact:</strong> ${cat.impact} | <strong>Probability:</strong> ${cat.probability}</p>
+        ${cat.factors?.map((factor: any) => `
+          <p>• ${factor.name}: ${factor.description}</p>
+        `).join('') || ''}
+      </div>
+    `).join('') || ''}
+  </div>
+
+  <div class="mitigation-strategies">
+    <h4>Recommended Mitigation Strategies:</h4>
+    ${riskAssessment.mitigationStrategies?.map((strategy: any) => `
+      <p>• ${strategy.strategy}</p>
+    `).join('') || ''}
+  </div>
+</div>
+    `
+  }
+
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-8 text-center">
         <div className="flex items-center justify-center mb-4">
           <CheckCircle className="w-8 h-8 text-green-500 mr-3" />
           <h1 className="text-3xl font-bold text-gray-900">
-            Specification Generated Successfully!
+            {isStrategic ? 'Strategic Specification Generated!' : 'Specification Generated Successfully!'}
           </h1>
+          {isStrategic && (
+            <Shield className="w-8 h-8 text-blue-500 ml-3" />
+          )}
         </div>
         <p className="text-lg text-gray-600">
-          Review your procurement specification and export when ready
+          {isStrategic
+            ? 'Strategic procurement specification with enhanced intelligence and risk assessment'
+            : 'Review your procurement specification and export when ready'
+          }
         </p>
+
+        {/* Strategic Features Badge */}
+        {isStrategic && (
+          <div className="mt-4 flex justify-center space-x-4">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+              <TrendingUp className="w-4 h-4 mr-1" />
+              Strategic Intelligence
+            </span>
+            {hasRiskAssessment && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                <AlertTriangle className="w-4 h-4 mr-1" />
+                Risk Assessment
+              </span>
+            )}
+            {specification.metadata?.domain && specification.metadata.domain !== 'general' && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                {specification.metadata.domain.charAt(0).toUpperCase() + specification.metadata.domain.slice(1)} Domain
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -94,6 +174,14 @@ const SpecificationPreview: React.FC<Props> = ({ specification, onStartOver }) =
                     <span>•</span>
                     <span>Category: {specification.formData.category.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
                     <span>•</span>
+                    <span>Budget: {specification.formData.budgetRange}</span>
+                    {specification.metadata?.domain && specification.metadata.domain !== 'general' && (
+                      <>
+                        <span>•</span>
+                        <span>Domain: {specification.metadata.domain.charAt(0).toUpperCase() + specification.metadata.domain.slice(1)}</span>
+                      </>
+                    )}
+                    <span>•</span>
                     <span>Generated: {new Date(specification.generatedAt).toLocaleDateString()}</span>
                   </div>
                 </div>
@@ -101,6 +189,16 @@ const SpecificationPreview: React.FC<Props> = ({ specification, onStartOver }) =
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                     Version {specification.version}
                   </span>
+                  {isStrategic && (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      Strategic
+                    </span>
+                  )}
+                  {hasRiskAssessment && (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                      Risk Assessed
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

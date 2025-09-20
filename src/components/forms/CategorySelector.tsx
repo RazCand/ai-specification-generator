@@ -14,6 +14,8 @@ interface SpecFormData {
   additionalNotes: string
   contactPerson: string
   department: string
+  domain: 'general' | 'mining' | 'municipal'
+  strategicPriority: 'cost-optimization' | 'innovation-focus' | 'risk-mitigation' | 'capability-building' | 'strategic-partnership'
 }
 
 interface Props {
